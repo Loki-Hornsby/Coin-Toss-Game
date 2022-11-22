@@ -19,6 +19,10 @@ public class Coin : MonoBehaviour {
     // Dragging motion
     bool active;
     bool bounced;
+
+    // Constants
+    public const float DragDefault = 2.5f;
+    public const float MinimumSpeed = 0.5f;
     
     void Awake(){
         if (Instance == null){
@@ -42,32 +46,35 @@ public class Coin : MonoBehaviour {
     /// <summary>
     /// Enables movement of the coin
     /// </summary>
-    public void Activate(int _ID){
-        transform.position = Game.Instance.GetClosestCounterToMouse(_ID).gameObject.transform.position;
+    public void Activate(){
         active = true;
     }
 
+    /// <summary>
+    /// Returns wether the coin is moving or not
+    /// </summary>
+    public bool isMoving(){
+        return (rb.velocity.magnitude > MinimumSpeed);
+    }
+
     void Update(){
-        // Apply drag motion to rb
-        if (Controls.Mouse.click && active) {
-            DragMotion.Instance.Export(ref rb);
+        if (active){
+            // Apply drag motion to rb
+            if (Controls.Mouse.GetClicked(0) && !isMoving()){
+                DragMotion.Instance.Export(ref rb);
 
-            Game.Instance.NextPlayer();
+                active = false;
+            }
 
-            active = false;
-        } 
+            // Set Position to nearest mouse pos
+            if (DragMotion.Instance.isDragIdle()){
+                Vector3 target = Game.Instance.GetClosestCounterToInput(
+                    Game.Instance.GetCurrentPlayer().GetID(),
+                    Controls.Mouse.GetPosition()
+                ).gameObject.transform.position;
 
-        // Bounces off edges of screen - needs improvement - mirroring isn't taken into consideration 
-        /*bool inScreen = MainCamera.Instance.IsInBounds(this.transform);
-
-        if (inScreen && bounced){
-            bounced = false;
-        } else if (!inScreen && !bounced) {
-            Vector2 vel = -rb.velocity;
-
-            rb.velocity = vel;
-        
-            bounced = true;
-        }*/
+                transform.position = target;
+            }
+        }
     }
 }

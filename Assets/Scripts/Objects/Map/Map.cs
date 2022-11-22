@@ -27,7 +27,7 @@ public class Map : MonoBehaviour{
         try {
             Rigidbody2D rb = other.gameObject.GetComponent<Rigidbody2D>();
             rb.velocity = -rb.velocity;
-            rb.drag = 5f;
+            rb.drag = Coin.DragDefault*2f;
         } catch (Exception ex) {
             Debug.LogError(ex.ToString());
         }
@@ -37,7 +37,7 @@ public class Map : MonoBehaviour{
     private void OnTriggerEnter2D(Collider2D other) {
         try {
             Rigidbody2D rb = other.gameObject.GetComponent<Rigidbody2D>();
-            rb.drag = 2.5f;
+            rb.drag = Coin.DragDefault;
         } catch (Exception ex) {
             Debug.LogError(ex.ToString());
         }

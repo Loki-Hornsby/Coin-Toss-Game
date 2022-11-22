@@ -34,9 +34,9 @@ public class Game : MonoBehaviour {
     /// <summary>
     /// https://forum.unity.com/threads/clean-est-way-to-find-nearest-object-of-many-c.44315/
     /// </summary>
-    public Counter GetClosestCounterToMouse(int _ID){
+    public Counter GetClosestCounterToInput(int _ID, Vector3 inp){
         var nClosest = counters.Where(t => (t.gameObject.GetComponent<Counter>().GetID() == _ID))
-            .OrderBy(t => ((Vector2)t.position - Controls.Mouse.position).sqrMagnitude)
+            .OrderBy(t => (t.position - inp).sqrMagnitude)
             .FirstOrDefault();
         return nClosest.gameObject.GetComponent<Counter>();
     }
@@ -44,15 +44,39 @@ public class Game : MonoBehaviour {
     /// <summary>
     /// Place a counter!
     /// </summary>
-    public void PlaceCounter(int ID){
-        Counter counter = Instantiate(counterPrefab, Controls.Mouse.position, Quaternion.identity).GetComponent<Counter>().Initialize(ID);
+    public void PlaceCounter(int _ID){
+        Counter counter = Instantiate(counterPrefab, Controls.Mouse.GetPosition(), Quaternion.identity).GetComponent<Counter>().Initialize(_ID);
         counters.Add(counter.gameObject.transform);
+
+        // Todo: Change to mesh
+        /*SpriteRenderer sp = counter.GetComponent<SpriteRenderer>();
+
+        switch (_ID){
+            case 1: // Red
+                sp.color = new Color(1, 0, 0, 0.25f);
+                break;
+            case 2: // Blue
+                sp.color = new Color(0, 0, 1, 0.25f);
+                break;
+            case 3: // Black
+                sp.color = new Color(0, 0, 0, 0.25f);
+                break;
+            case 4: // White
+                sp.color = new Color(1, 1, 1, 0.25f);
+                break;
+            default:
+                sp.color = Color.cyan;
+                break;
+        }*/
     }
 
     /// <summary>
     /// Move to the next player
     /// </summary>
     public void NextPlayer(){
+        // Reset the mouse to avoid instant clicks when swapping players
+        Controls.Mouse.Reset();
+
         // Assign old player
         Player lastPlayer = turn.Dequeue();
 
@@ -69,19 +93,26 @@ public class Game : MonoBehaviour {
         newPlayer.BeginTurn();
 
         // Activate coin
-        if (newPlayer.state == States.MovingCoin) Coin.Instance.Activate(newPlayer.GetID());
+        if (newPlayer.GetState() == PlayerStates.MovingCoin) Coin.Instance.Activate();
+    }
+
+    /// <summary>
+    /// Get the current active player's ID
+    /// </summary>
+    public Player GetCurrentPlayer(){
+        return turn.Peek();
     }
 
     /// <summary>
     /// Create an instance of a player
     /// </summary>
-    void CreatePlayer(int ID){
+    void CreatePlayer(int _ID){
         // Create
         GameObject obj = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
         // Reference
         Player ply = obj.GetComponent<Player>();
         // Initialize
-        ply.Initialize(ID);
+        ply.Initialize(_ID);
         // Enqueue
         turn.Enqueue(ply);
     }
