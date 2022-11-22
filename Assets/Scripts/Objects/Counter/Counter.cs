@@ -11,7 +11,7 @@ using UnityEngine;
 [RequireComponent(typeof(CircleCollider2D))]
 public class Counter : MonoBehaviour {
     // Mesh Setup
-    public int xSize, ySize;
+    public Vector2 Size;
     private Vector3[] vertices;
 
     // General Behaviour
@@ -43,13 +43,13 @@ public class Counter : MonoBehaviour {
 
     /// <summary>
     /// Generate the mesh
-    /// https://catlikecoding.com/unity/tutorials/procedural-grid/
+    /// https://catlikecoding.com/unity/tutorials/mesh-basics/
     /// </summary>
     IEnumerator Generate(){
-        vertices = new Vector3[(xSize + 1) * (ySize + 1)];
+        vertices = new Vector3[(Size.x + 1) * (Size.y + 1)];
 
-        for (int i = 0, y = 0; y <= ySize; y++) {
-			for (int x = 0; x <= xSize; x++, i++) {
+        for (int i = 0, y = 0; y <= Size.y; y++) {
+			for (int x = 0; x <= Size.x; x++, i++) {
 				vertices[i] = new Vector3(x, y);
 
                 yield return null;
