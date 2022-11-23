@@ -47,8 +47,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6473eeb8a5c37a341aa2ce80fb92c270, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xSize: 1024
-  ySize: 1024
 --- !u!58 &6279988128221179877
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -93,7 +91,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

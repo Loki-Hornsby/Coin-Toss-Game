@@ -10,8 +10,9 @@ using UnityEngine;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 [RequireComponent(typeof(CircleCollider2D))]
 public class Counter : MonoBehaviour {
-    // Mesh Setup
-    private Vector3[] vertices;
+    // Mesh behaviour
+    Vector3[] vertices;
+    int[] triangles;
 
     // General Behaviour
     CircleCollider2D col; // Albeit a mesh we can still use a 2D collider
@@ -29,61 +30,103 @@ public class Counter : MonoBehaviour {
         
     }
 
-    private void OnDrawGizmos () {
-        if (vertices == null) {
-			return;
-		}
+    /// <summary>
+    /// https://stackoverflow.com/questions/13708395/how-can-i-draw-a-circle-in-unity3d/31767755#31767755 
+    /// https://catlikecoding.com/unity/tutorials/mesh-basics/
+    /// https://stackoverflow.com/questions/53406534/procedural-circle-mesh-with-uniform-faces/53422022#53422022 
+    /// Swiper no swiping? ~ i rewrote most of the code 'cus although it worked i had no clue how!
+    /// <summary>
+    public Mesh GenerateCircle(int res) {
+        /*
+        float d = 1f / res;
 
-		Gizmos.color = Color.black;
-		for (int i = 0; i < vertices.Length; i++) {
-			Gizmos.DrawSphere(vertices[i], 0.1f);
-		}
-	}
+        var vtc = new List<Vector3>();
+        vtc.Add(Vector3.zero); // Start with only center point
+        var tris = new List<int>();
+
+        // First pass => build vertices
+        for (int circ = 0; circ < res; ++circ) {
+            float angleStep = (Mathf.PI * 2f) / ((circ + 1) * 6);
+            for (int point = 0; point < (circ + 1) * 6; ++point) {
+                vtc.Add(new Vector2(
+                    Mathf.Cos(angleStep * point),
+                    Mathf.Sin(angleStep * point)) * d * (circ + 1));
+            }
+        }
+
+        // Second pass => connect vertices into triangles
+        for (int circ = 0; circ < res; ++circ) {
+            for (int point = 0, other = 0; point < (circ + 1) * 6; ++point) {
+                if (point % (circ + 1) != 0) {
+                    // Create 2 triangles
+                    tris.Add(GetPointIndex(circ - 1, other + 1));
+                    tris.Add(GetPointIndex(circ - 1, other));
+                    tris.Add(GetPointIndex(circ, point));
+                    tris.Add(GetPointIndex(circ, point));
+                    tris.Add(GetPointIndex(circ, point + 1));
+                    tris.Add(GetPointIndex(circ - 1, other + 1));
+                    ++other;
+                } else {
+                    // Create 1 inverse triange
+                    tris.Add(GetPointIndex(circ, point));
+                    tris.Add(GetPointIndex(circ, point + 1));
+                    tris.Add(GetPointIndex(circ - 1, other));
+                    // Do not move to the next point in the smaller circle
+                }
+            }
+        }*/
+
+        // Circle parameters
+        float Theta = 0f;
+        float ThetaScale = 0.01f;
+        int Size = (int)((1f / ThetaScale) + 1f);
+        float radius = 2f;
+        int Rings = 4;
+
+        // Mesh calc
+        vertices = new Vector3[Size * Rings];
+        triangles = new int[Size/3];
+
+        // Circle
+        for (int i = 0; i < Size; i++) {
+            for (int v = 0; v < Rings; v++){
+                // Position
+                Theta += (2.0f * Mathf.PI * ThetaScale);
+                float x = (radius / (v + 1)) * Mathf.Cos(Theta);
+                float y = (radius / (v + 1)) * Mathf.Sin(Theta);
+                
+                // Define Triangles
+                /*if (i % 3 == 0 && i > 3 && i < triangles.Length - 3){
+                    for (int v = 0; v < 3; v++){
+                        triangles[(i - 3) + v] = i + v;
+                    }
+                }*/
+                
+                // Define Vertices
+                vertices[i * (v + 1)] = new Vector3(x, y, 0);
+
+                if ((i * (v + 1)) > 0) Debug.DrawLine(vertices[(i * (v + 1)) - 1], vertices[i * (v + 1)], Color.green, 15f);
+            }
+        }
+
+        // Create the mesh
+        var m = new Mesh();
+        m.SetVertices(vertices);
+        m.SetTriangles(triangles, 0);
+        m.RecalculateNormals();
+        m.UploadMeshData(true);
+
+        // Throw it back
+        return m;
+    }
+
 
     /// <summary>
     /// Generate the mesh
-    /// https://catlikecoding.com/unity/tutorials/mesh-basics/
-    /// Literally just copying the code and reading how it works ~ 
-    ///     there's not much point for me to try to write this from scratch since i'll end up with the same code more or less
-    ///         Also that would take way too long when i can understand it in a much easier fashion
     /// </summary>
     void Generate(){
-        // Size params
-        int X = 10;
-        int Y = 10;
-
-        // Create mesh
-        Mesh GenMesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = GenMesh;
-		GenMesh.name = "Procedural Grid";
-
-        // Initialize vertices
-        vertices = new Vector3[(X + 1) * (Y + 1)];
-
-        // Generate positions
-        for (int i = 0, y = 0; y <= Y; y++) {
-			for (int x = 0; x <= X; x++, i++) {
-				vertices[i] = new Vector3(x, y);
-			}
-		}
-
-        // Apply mesh
-        GenMesh.vertices = vertices;
-
-        // Generate triangles
-        int[] triangles = new int[X * Y * 6];
-		for (int ti = 0, vi = 0, y = 0; y < Y; y++, vi++) { // I did not know you could stack conditions in a for loop!
-            for (int x = 0; x < X; x++, ti += 6, vi++) {
-                triangles[ti] = vi;
-                triangles[ti + 3] = triangles[ti + 2] = vi + 1;
-                triangles[ti + 4] = triangles[ti + 1] = vi + X + 1;
-                triangles[ti + 5] = vi + X + 2;
-            }
-		}
-
-        // Apply triangles
-        GenMesh.triangles = triangles;
-    }
+        GetComponent<MeshFilter>().mesh = GenerateCircle(6);
+    }   
 
     public Counter Initialize(int _ID){
         // Generate the mesh
