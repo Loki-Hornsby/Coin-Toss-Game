@@ -11,7 +11,6 @@ using UnityEngine;
 [RequireComponent(typeof(CircleCollider2D))]
 public class Counter : MonoBehaviour {
     // Mesh Setup
-    public Vector2 Size;
     private Vector3[] vertices;
 
     // General Behaviour
@@ -44,22 +43,51 @@ public class Counter : MonoBehaviour {
     /// <summary>
     /// Generate the mesh
     /// https://catlikecoding.com/unity/tutorials/mesh-basics/
+    /// Literally just copying the code and reading how it works ~ 
+    ///     there's not much point for me to try to write this from scratch since i'll end up with the same code more or less
+    ///         Also that would take way too long when i can understand it in a much easier fashion
     /// </summary>
-    IEnumerator Generate(){
-        vertices = new Vector3[(Size.x + 1) * (Size.y + 1)];
+    void Generate(){
+        // Size params
+        int X = 10;
+        int Y = 10;
 
-        for (int i = 0, y = 0; y <= Size.y; y++) {
-			for (int x = 0; x <= Size.x; x++, i++) {
+        // Create mesh
+        Mesh GenMesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = GenMesh;
+		GenMesh.name = "Procedural Grid";
+
+        // Initialize vertices
+        vertices = new Vector3[(X + 1) * (Y + 1)];
+
+        // Generate positions
+        for (int i = 0, y = 0; y <= Y; y++) {
+			for (int x = 0; x <= X; x++, i++) {
 				vertices[i] = new Vector3(x, y);
-
-                yield return null;
 			}
 		}
+
+        // Apply mesh
+        GenMesh.vertices = vertices;
+
+        // Generate triangles
+        int[] triangles = new int[X * Y * 6];
+		for (int ti = 0, vi = 0, y = 0; y < Y; y++, vi++) { // I did not know you could stack conditions in a for loop!
+            for (int x = 0; x < X; x++, ti += 6, vi++) {
+                triangles[ti] = vi;
+                triangles[ti + 3] = triangles[ti + 2] = vi + 1;
+                triangles[ti + 4] = triangles[ti + 1] = vi + X + 1;
+                triangles[ti + 5] = vi + X + 2;
+            }
+		}
+
+        // Apply triangles
+        GenMesh.triangles = triangles;
     }
 
     public Counter Initialize(int _ID){
         // Generate the mesh
-        StartCoroutine(Generate());
+        Generate();
 
         // General
         col = GetComponent<CircleCollider2D>();
